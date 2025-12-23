@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteo Especial con Delay</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background: #f4f7f6; color: #333; }
+        .container { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
+        textarea { width: 100%; height: 160px; margin-bottom: 15px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; resize: none; font-size: 14px; box-sizing: border-box; }
+        
+        button { width: 100%; padding: 12px; background: #0070f3; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #0051bb; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Estilos del Spinner */
+        #loader { display: none; margin: 20px auto; border: 4px solid #f3f3f3; border-top: 4px solid #0070f3; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #statusText { font-style: italic; color: #666; margin-top: 10px; display: none; }
+
+        ul { list-style: none; padding: 0; margin-top: 25px; text-align: left; }
+        li { background: #f9f9f9; margin: 8px 0; padding: 12px; border-radius: 6px; border-left: 5px solid #0070f3; display: flex; justify-content: space-between; animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .pos { font-weight: bold; color: #0070f3; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🏆 Sorteo de Posiciones</h2>
+    <p>Ingresa 10 nombres (uno por línea)</p>
+    <textarea id="namesInput" placeholder="Ejemplo:&#10;Juan&#10;Maria&#10;Bruno&#10;..."></textarea>
+    
+    <button id="btnSortear" onclick="iniciarSorteo()">¡Realizar Sorteo!</button>
+
+    <div id="loader"></div>
+    <p id="statusText">Mezclando nombres de forma aleatoria...</p>
+
+    <ul id="resultList"></ul>
+</div>
+
+<script>
+    function iniciarSorteo() {
+        const input = document.getElementById('namesInput').value;
+        const nombres = input.split('\n').map(n => n.trim()).filter(n => n !== "");
+
+        if (nombres.length !== 10) {
+            alert("Error: Debes introducir exactamente 10 nombres.");
+            return;
+        }
+
+        // UI: Desactivar botón y mostrar carga
+        document.getElementById('btnSortear').disabled = true;
+        document.getElementById('resultList').innerHTML = "";
+        document.getElementById('loader').style.display = "block";
+        document.getElementById('statusText').style.display = "block";
+
+        // Esperar 3 segundos (3000ms) antes de mostrar el resultado
+        setTimeout(() => {
+            procesarSorteo(nombres);
+            document.getElementById('loader').style.display = "none";
+            document.getElementById('statusText').style.display = "none";
+            document.getElementById('btnSortear').disabled = false;
+        }, 3000);
+    }
+
+    function procesarSorteo(nombres) {
+        let especiales = [];
+        let normales = [];
+
+        // Lógica de filtrado "Bruno/Bru"
+        nombres.forEach(n => {
+            const lowerN = n.toLowerCase();
+            if (lowerN === "bruno" || lowerN === "bru") {
+                especiales.push(n);
+            } else {
+                normales.push(n);
+            }
+        });
+
+        // Mezclar normales
+        for (let i = normales.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [normales[i], normales[j]] = [normales[j], normales[i]];
+        }
+
+        let resultado = new Array(10).fill(null);
+
+        // Colocar especiales en 9 o 10 (índices 8 o 9)
+        especiales.forEach(esp => {
+            let pos = Math.random() < 0.5 ? 8 : 9;
+            if (resultado[pos] !== null) pos = (pos === 8 ? 9 : 8);
+            resultado[pos] = esp;
+        });
+
+        // Rellenar el resto
+        let nIdx = 0;
+        for (let i = 0; i < 10; i++) {
+            if (resultado[i] === null) {
+                resultado[i] = normales[nIdx];
+                nIdx++;
+            }
+        }
+
+        const list = document.getElementById('resultList');
+        resultado.forEach((nombre, index) => {
+            const li = document.createElement('li');
+            li.style.animationDelay = (index * 0.1) + "s"; // Efecto cascada
+            li.innerHTML = `<span class="pos">${index + 1}º</span> <span>${nombre}</span>`;
+            list.appendChild(li);
+        });
+    }
+</script>
+
+</body>
+</html>
